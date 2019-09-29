@@ -2,6 +2,7 @@ package com.test.emailgen.controller;
 
 import com.test.emailgen.model.User;
 import com.test.emailgen.repository.UserRepository;
+import com.test.emailgen.util.Generator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,12 +25,19 @@ public class UserController {
 
     @PostMapping("/adduser")
     public String addUser(@Valid User user, BindingResult result, Model model ){
-        String fullName = user.getName();
-        user.setEmail(fullName+"kalimat.ai");
-        user.setUsername(fullName);
+        Generator generator = new Generator(user.getName());
+
+        if(userRepository.findByEmail(generator.getEmail()).size() > 0){
+            int i = 1;
+            while(userRepository.findByEmail(generator.getEmail()).size() > 0){
+                generator.setEmail(generator.getUserName()+i+"@kalimat.ai");
+                i++;
+            }
+        }
+        user.setUsername(generator.getUserName());
+        user.setEmail(generator.getEmail());
 
         if (result.hasErrors()){
-            System.out.println("tes");
             return "add-user";
         }
         userRepository.save(user);
